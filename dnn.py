@@ -3,13 +3,10 @@ import numpy
 
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
-from keras.layers.normalization import BatchNormalization
 from keras.wrappers.scikit_learn import KerasClassifier
 
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_score, StratifiedKFold
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import StratifiedKFold
-from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 
 # fix random seed for reproducibility
@@ -48,12 +45,12 @@ relevantLaw = pandas.concat([relevantLaw3, relevantLaw6, relevantLaw8])
 x = pandas.concat([circumstances, full, law, procedure, relevantLaw], axis=1).as_matrix()
 y = cases[1].values
 
-# encode class values as integers
+# encode verdicts as integers
 encoder = LabelEncoder()
 encoder.fit(y)
 encoded_y = encoder.transform(y)
 
-# larger model
+# Model architecture
 def DNN():
     model = Sequential()
     model.add(Dense(2048, input_dim=x.shape[1], init='normal', activation='relu'))
@@ -69,9 +66,9 @@ def DNN():
     return model
 
 estimators = []
-estimators.append(('mlp', KerasClassifier(build_fn=DNN, nb_epoch=8, batch_size=32, verbose=1)))
+estimators.append(('mlp', KerasClassifier(build_fn=DNN, nb_epoch=16, batch_size=64, verbose=1)))
 pipeline = Pipeline(estimators)
-kfold = StratifiedKFold(n_splits=3, shuffle=False, random_state=seed)
+kfold = StratifiedKFold(n_splits=3, shuffle=True, random_state=seed)
 results = cross_val_score(pipeline, x, encoded_y, cv=kfold, verbose=1)
 print("Result: %.2f%% (%.2f%%)" % (results.mean()*100, results.std()*100))
 
