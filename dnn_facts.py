@@ -39,7 +39,7 @@ encoder.fit(y)
 encoded_y = encoder.transform(y)
 
 
-# neural network architecture
+# neural network builder
 def build_fn(n_hidden_units, init, W_regularization_weight, b_regularization_weight, activation, dropout, optimizer):
     model = Sequential()
 
@@ -64,7 +64,7 @@ def build_fn(n_hidden_units, init, W_regularization_weight, b_regularization_wei
     return model
 
 
-# architecture parameters
+# neural network parameters
 param_grid = dict(
     nb_epoch=numpy.array([32]),
     batch_size=numpy.array([8]),
@@ -77,16 +77,13 @@ param_grid = dict(
     optimizer=['adam'])
 
 
-# fix random seed for reproducibility
-seed = 8
-
-
-# search parameter space for best architecture
+# search parameter space for best neural network architecture, fix random state for reproducibility
 classifier = KerasClassifier(build_fn=build_fn, verbose=1)
-skfold = StratifiedKFold(n_splits=10, shuffle=True, random_state=seed)
+skfold = StratifiedKFold(n_splits=10, shuffle=True, random_state=8)
 grid_search = GridSearchCV(classifier, param_grid, cv=skfold, verbose=1)
 grid_result = grid_search.fit(x, encoded_y)
 
 print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
 for params, mean_score, scores in grid_result.grid_scores_:
     print("%f (%f) with: %r" % (scores.mean(), scores.std(), params))
+
